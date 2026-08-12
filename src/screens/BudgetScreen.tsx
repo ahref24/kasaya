@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import { formatCurrency } from '../utils/currency';
 
 export default function BudgetScreen() {
+    const navigation = useNavigation<any>();
     const { budgets, transactions, settings, categories, deleteBudget } = useFinance();
 
     const currentMonth = new Date().getMonth();
@@ -58,7 +60,7 @@ export default function BudgetScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Budget</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('AddBudget')}>
                     <Text style={styles.addBtnText}>+ Add Budget</Text>
                 </TouchableOpacity>
             </View>

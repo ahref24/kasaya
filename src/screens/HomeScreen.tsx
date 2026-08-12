@@ -123,7 +123,12 @@ export default function HomeScreen() {
 
                 {/* Budget Summary */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Monthly Budget</Text>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Monthly Budget</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('AddBudget')}>
+                            <Text style={styles.seeAll}>+ Add Budget</Text>
+                        </TouchableOpacity>
+                    </View>
                     <View style={styles.budgetCard}>
                         <View style={styles.budgetRow}>
                             <Text style={styles.budgetSpent}>

@@ -9,6 +9,7 @@ import { useFinance } from '../context/FinanceContext';
 import HomeScreen from '../screens/HomeScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
+import AddBudgetScreen from '../screens/AddBudgetScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 import GoalsScreen from '../screens/GoalsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -68,6 +69,11 @@ export const AppNavigator = () => {
                         <Stack.Screen
                             name="AddTransaction"
                             component={AddTransactionScreen}
+                            options={{ presentation: 'modal' }}
+                        />
+                        <Stack.Screen
+                            name="AddBudget"
+                            component={AddBudgetScreen}
                             options={{ presentation: 'modal' }}
                         />
                     </>
