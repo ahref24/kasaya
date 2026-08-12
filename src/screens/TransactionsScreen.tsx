@@ -1,18 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import { formatCurrency } from '../utils/currency';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function TransactionsScreen() {
     const { transactions, categories, settings } = useFinance();
     const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
     const [search, setSearch] = useState('');
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+    const [showStartPicker, setShowStartPicker] = useState(false);
+    const [showEndPicker, setShowEndPicker] = useState(false);
 
     const filteredTransactions = transactions
         .filter(t => filter === 'all' || t.type === filter)
+        .filter(t => {
+            const transactionDate = new Date(t.date);
+            if (startDate && transactionDate < new Date(startDate.toDateString())) return false;
+            if (endDate && transactionDate > new Date(endDate.toDateString() + ' 23:59:59')) return false;
+            return true;
+        })
         .filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -48,6 +59,16 @@ export default function TransactionsScreen() {
         </View>
     );
 
+    const formatDate = (date: Date | null) => {
+        if (!date) return 'Select date';
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const clearDateFilter = () => {
+        setStartDate(null);
+        setEndDate(null);
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -77,6 +98,47 @@ export default function TransactionsScreen() {
                     </TouchableOpacity>
                 ))}
             </View>
+
+            <View style={styles.dateFilterContainer}>
+                <TouchableOpacity style={styles.dateBtn} onPress={() => setShowStartPicker(true)}>
+                    <Ionicons name="calendar-outline" size={18} color={theme.colors.textSecondary} />
+                    <Text style={styles.dateBtnText}>{formatDate(startDate)}</Text>
+                </TouchableOpacity>
+                <Text style={styles.dateSeparator}>to</Text>
+                <TouchableOpacity style={styles.dateBtn} onPress={() => setShowEndPicker(true)}>
+                    <Ionicons name="calendar-outline" size={18} color={theme.colors.textSecondary} />
+                    <Text style={styles.dateBtnText}>{formatDate(endDate)}</Text>
+                </TouchableOpacity>
+                {(startDate || endDate) && (
+                    <TouchableOpacity onPress={clearDateFilter} style={styles.clearDateBtn}>
+                        <Ionicons name="close-circle" size={20} color={theme.colors.textSecondary} />
+                    </TouchableOpacity>
+                )}
+            </View>
+
+            {showStartPicker && (
+                <DateTimePicker
+                    value={startDate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                        setShowStartPicker(Platform.OS === 'ios');
+                        if (selectedDate) setStartDate(selectedDate);
+                    }}
+                />
+            )}
+
+            {showEndPicker && (
+                <DateTimePicker
+                    value={endDate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                        setShowEndPicker(Platform.OS === 'ios');
+                        if (selectedDate) setEndDate(selectedDate);
+                    }}
+                />
+            )}
 
             {filteredTransactions.length === 0 ? (
                 <View style={styles.emptyState}>
@@ -156,6 +218,36 @@ const styles = StyleSheet.create({
     filterTextActive: {
         color: theme.colors.white,
         fontWeight: '600',
+    },
+    dateFilterContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: theme.spacing.lg,
+        marginBottom: theme.spacing.md,
+        gap: theme.spacing.sm,
+    },
+    dateBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.colors.card,
+        paddingVertical: theme.spacing.sm,
+        paddingHorizontal: theme.spacing.md,
+        borderRadius: theme.borderRadius.md,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        gap: theme.spacing.xs,
+        flex: 1,
+    },
+    dateBtnText: {
+        color: theme.colors.text,
+        fontSize: theme.typography.bodySmall.fontSize,
+    },
+    dateSeparator: {
+        color: theme.colors.textSecondary,
+        fontSize: theme.typography.bodySmall.fontSize,
+    },
+    clearDateBtn: {
+        padding: theme.spacing.xs,
     },
     listContainer: {
         paddingHorizontal: theme.spacing.lg,
