@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function AddTransactionScreen() {
     const navigation = useNavigation<any>();
@@ -17,6 +18,8 @@ export default function AddTransactionScreen() {
     const [amount, setAmount] = useState('');
     const [title, setTitle] = useState('');
     const [categoryId, setCategoryId] = useState('');
+    const [date, setDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const relevantCategories = categories.filter(c => c.type === type);
 
@@ -41,13 +44,17 @@ export default function AddTransactionScreen() {
                 amount: Number(amount),
                 title,
                 categoryId,
-                date: new Date().toISOString(),
+                date: date.toISOString(),
                 createdAt: new Date().toISOString(),
             });
             navigation.goBack();
         } catch (error) {
             Alert.alert('Error', 'Failed to save transaction.');
         }
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     return (
@@ -88,6 +95,27 @@ export default function AddTransactionScreen() {
                             autoFocus
                         />
                     </View>
+
+                    <View style={styles.field}>
+                        <Text style={styles.label}>Date</Text>
+                        <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
+                            <Ionicons name="calendar-outline" size={20} color={theme.colors.textSecondary} />
+                            <Text style={styles.dateBtnText}>{formatDate(date)}</Text>
+                            <Ionicons name="chevron-down" size={20} color={theme.colors.textSecondary} />
+                        </TouchableOpacity>
+                    </View>
+
+                    {showDatePicker && (
+                        <DateTimePicker
+                            value={date}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={(event, selectedDate) => {
+                                setShowDatePicker(Platform.OS === 'ios');
+                                if (selectedDate) setDate(selectedDate);
+                            }}
+                        />
+                    )}
 
                     <View style={styles.field}>
                         <Text style={styles.label}>Title</Text>
@@ -207,6 +235,21 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: theme.colors.text,
         marginBottom: theme.spacing.sm,
+    },
+    dateBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.colors.card,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        borderRadius: theme.borderRadius.md,
+        padding: theme.spacing.md,
+        gap: theme.spacing.sm,
+    },
+    dateBtnText: {
+        flex: 1,
+        fontSize: theme.typography.body.fontSize,
+        color: theme.colors.text,
     },
     input: {
         backgroundColor: theme.colors.card,
