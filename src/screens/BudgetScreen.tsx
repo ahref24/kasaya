@@ -43,15 +43,8 @@ export default function BudgetScreen() {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.budgetAmounts}>
-                    <Text style={styles.limitText}>{formatCurrency(item.amount, settings.currencySymbol)} limit</Text>
-                    <Text style={styles.spentText}>{formatCurrency(spent, settings.currencySymbol)} spent</Text>
+                    <Text style={styles.limitText}>{formatCurrency(item.amount, settings.currencySymbol)}</Text>
                 </View>
-                <View style={styles.barBg}>
-                    <View style={[styles.barFill, { width: `${progress}%`, backgroundColor: isExceeded ? theme.colors.expense : theme.colors.primary }]} />
-                </View>
-                <Text style={[styles.progressText, isExceeded && { color: theme.colors.expense }]}>
-                    {Math.round((spent / item.amount) * 100)}% {isExceeded ? 'Exceeded' : 'Used'}
-                </Text>
             </View>
         );
     };

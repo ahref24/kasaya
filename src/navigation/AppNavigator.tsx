@@ -8,6 +8,7 @@ import { useFinance } from '../context/FinanceContext';
 
 import HomeScreen from '../screens/HomeScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
+import AccountSummaryScreen from '../screens/AccountSummaryScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
 import AddBudgetScreen from '../screens/AddBudgetScreen';
 import BudgetScreen from '../screens/BudgetScreen';
@@ -27,6 +28,7 @@ const MainTabs = () => {
                     if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
                     else if (route.name === 'Transactions') iconName = focused ? 'list' : 'list-outline';
                     else if (route.name === 'Budget') iconName = focused ? 'pie-chart' : 'pie-chart-outline';
+                    else if (route.name === 'Account') iconName = focused ? 'receipt' : 'receipt-outline';
                     else if (route.name === 'Goals') iconName = focused ? 'flag' : 'flag-outline';
                     else if (route.name === 'More') iconName = focused ? 'menu' : 'menu-outline';
 
@@ -45,6 +47,7 @@ const MainTabs = () => {
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="Transactions" component={TransactionsScreen} />
             <Tab.Screen name="Budget" component={BudgetScreen} />
+            <Tab.Screen name="Account" component={AccountSummaryScreen} />
             <Tab.Screen name="Goals" component={GoalsScreen} />
             <Tab.Screen name="More" component={SettingsScreen} />
         </Tab.Navigator>
