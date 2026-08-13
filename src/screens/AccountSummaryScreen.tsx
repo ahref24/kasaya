@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import { formatCurrency } from '../utils/currency';
 
 export default function AccountSummaryScreen() {
+    const navigation = useNavigation<any>();
     const { transactions, settings, categories } = useFinance();
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -55,11 +57,19 @@ export default function AccountSummaryScreen() {
 
     const isCurrentMonth = selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
 
+    const handleCategoryPress = (categoryId: string) => {
+        navigation.navigate('Transactions', {
+            categoryId,
+            month: selectedMonth,
+            year: selectedYear,
+        });
+    };
+
     const renderCategoryItem = ({ item }: { item: { categoryId: string; amount: number } }) => {
         const cat = categories.find(c => c.id === item.categoryId);
         const percentage = totalExpenses > 0 ? (item.amount / totalExpenses) * 100 : 0;
         return (
-            <View style={styles.categoryItem}>
+            <TouchableOpacity style={styles.categoryItem} onPress={() => handleCategoryPress(item.categoryId)} activeOpacity={0.7}>
                 <View style={styles.categoryLeft}>
                     <View style={[styles.catIconContainer, { backgroundColor: theme.colors.expense + '20' }]}>
                         <Ionicons name={cat?.icon as any || 'help-outline'} size={18} color={theme.colors.expense} />
@@ -69,8 +79,9 @@ export default function AccountSummaryScreen() {
                 <View style={styles.categoryRight}>
                     <Text style={styles.categoryAmount}>{formatCurrency(item.amount, settings.currencySymbol)}</Text>
                     <Text style={styles.categoryPercent}>{percentage.toFixed(1)}%</Text>
+                    <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                 </View>
-            </View>
+            </TouchableOpacity>
         );
     };
 

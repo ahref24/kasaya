@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import { formatCurrency } from '../utils/currency';
@@ -8,6 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function TransactionsScreen() {
+    const navigation = useNavigation<any>();
+    const route = useRoute<any>();
     const { transactions, categories, settings } = useFinance();
     const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
     const [search, setSearch] = useState('');
@@ -16,9 +19,20 @@ export default function TransactionsScreen() {
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
 
+    const routeCategoryId = route.params?.categoryId as string | undefined;
+    const routeMonth = route.params?.month as number | undefined;
+    const routeYear = route.params?.year as number | undefined;
+
     const filteredTransactions = transactions
-        .filter(t => filter === 'all' || t.type === filter)
         .filter(t => {
+            if (routeCategoryId && t.categoryId !== routeCategoryId) return false;
+            return filter === 'all' || t.type === filter;
+        })
+        .filter(t => {
+            if (routeMonth !== undefined && routeYear !== undefined) {
+                const d = new Date(t.date);
+                if (d.getMonth() !== routeMonth || d.getFullYear() !== routeYear) return false;
+            }
             const transactionDate = new Date(t.date);
             if (startDate && transactionDate < new Date(startDate.toDateString())) return false;
             if (endDate && transactionDate > new Date(endDate.toDateString() + ' 23:59:59')) return false;
@@ -26,6 +40,8 @@ export default function TransactionsScreen() {
         })
         .filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const activeCategoryName = routeCategoryId ? categories.find(c => c.id === routeCategoryId)?.name : null;
 
     // Group by date
     const grouped = filteredTransactions.reduce((acc, t) => {
@@ -69,10 +85,21 @@ export default function TransactionsScreen() {
         setEndDate(null);
     };
 
+    const clearCategoryFilter = () => {
+        navigation.setParams({ categoryId: undefined, month: undefined, year: undefined });
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Transactions</Text>
+                <Text style={styles.title}>
+                    {activeCategoryName ? activeCategoryName : 'Transactions'}
+                </Text>
+                {activeCategoryName && (
+                    <TouchableOpacity onPress={clearCategoryFilter}>
+                        <Text style={styles.clearFilterText}>Clear</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <View style={styles.searchContainer}>
@@ -168,11 +195,19 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: theme.spacing.lg,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     title: {
         fontSize: theme.typography.h1.fontSize,
         fontWeight: theme.typography.h1.fontWeight,
         color: theme.colors.text,
+    },
+    clearFilterText: {
+        color: theme.colors.primary,
+        fontWeight: '600',
+        fontSize: theme.typography.body.fontSize,
     },
     searchContainer: {
         flexDirection: 'row',
