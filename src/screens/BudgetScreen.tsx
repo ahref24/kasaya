@@ -44,7 +44,14 @@ export default function BudgetScreen() {
                 </View>
                 <View style={styles.budgetAmounts}>
                     <Text style={styles.limitText}>{formatCurrency(item.amount, settings.currencySymbol)}</Text>
+                    <Text style={[styles.spentText, isExceeded && styles.spentTextExceeded]}>
+                        {formatCurrency(spent, settings.currencySymbol)} spent
+                    </Text>
                 </View>
+                <View style={styles.barBg}>
+                    <View style={[styles.barFill, { width: `${progress}%`, backgroundColor: isExceeded ? theme.colors.expense : theme.colors.primary }]} />
+                </View>
+                <Text style={styles.progressText}>{progress.toFixed(1)}%</Text>
             </View>
         );
     };
@@ -86,8 +93,9 @@ const styles = StyleSheet.create({
     deleteText: { color: theme.colors.expense, fontSize: theme.typography.bodySmall.fontSize },
     budgetAmounts: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: theme.spacing.xs },
     limitText: { color: theme.colors.textSecondary, fontSize: theme.typography.bodySmall.fontSize },
-    spentText: { fontWeight: '600', fontSize: theme.typography.body.fontSize },
-    barBg: { height: 8, backgroundColor: theme.colors.border, borderRadius: 4, marginBottom: theme.spacing.xs },
+    spentText: { fontWeight: '600', fontSize: theme.typography.body.fontSize, color: theme.colors.text },
+    spentTextExceeded: { color: theme.colors.expense },
+    barBg: { height: 8, backgroundColor: theme.colors.border, borderRadius: 4, marginBottom: theme.spacing.xs, overflow: 'hidden' },
     barFill: { height: 8, borderRadius: 4 },
     progressText: { textAlign: 'right', fontSize: theme.typography.caption.fontSize, color: theme.colors.textSecondary },
     emptyState: { alignItems: 'center', padding: theme.spacing.xl, marginTop: theme.spacing.xl },

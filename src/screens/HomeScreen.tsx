@@ -129,26 +129,28 @@ export default function HomeScreen() {
                             <Text style={styles.seeAll}>+ Add Budget</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={styles.budgetCard}>
-                        <View style={styles.budgetRow}>
-                            <Text style={styles.budgetSpent}>
-                                {formatCurrency(currentMonthExpenses, settings.currencySymbol)} spent
-                            </Text>
-                            <Text style={styles.budgetTotal}>
-                                of {formatCurrency(totalBudget, settings.currencySymbol)}
-                            </Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Budget')} activeOpacity={0.4}>
+                        <View style={styles.budgetCard}>
+                            <View style={styles.budgetRow}>
+                                <Text style={styles.budgetSpent}>
+                                    {formatCurrency(currentMonthExpenses, settings.currencySymbol)} spent
+                                </Text>
+                                <Text style={styles.budgetTotal}>
+                                    of {formatCurrency(totalBudget, settings.currencySymbol)}
+                                </Text>
+                            </View>
+                            <View style={styles.progressBarBg}>
+                                <View
+                                    style={[
+                                        styles.progressBarFill,
+                                        { width: `${budgetPercentage > 100 ? 100 : budgetPercentage}%` },
+                                        budgetPercentage > 90 ? { backgroundColor: theme.colors.expense } : {}
+                                    ]}
+                                />
+                            </View>
+                            <Text style={styles.budgetPercent}>{budgetPercentage}% used</Text>
                         </View>
-                        <View style={styles.progressBarBg}>
-                            <View
-                                style={[
-                                    styles.progressBarFill,
-                                    { width: `${budgetPercentage > 100 ? 100 : budgetPercentage}%` },
-                                    budgetPercentage > 90 ? { backgroundColor: theme.colors.expense } : {}
-                                ]}
-                            />
-                        </View>
-                        <Text style={styles.budgetPercent}>{budgetPercentage}% used</Text>
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Recent Transactions */}

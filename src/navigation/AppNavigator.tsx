@@ -11,6 +11,7 @@ import TransactionsScreen from '../screens/TransactionsScreen';
 import AccountSummaryScreen from '../screens/AccountSummaryScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
 import AddBudgetScreen from '../screens/AddBudgetScreen';
+import AddGoalScreen from '../screens/AddGoalScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 import GoalsScreen from '../screens/GoalsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -77,6 +78,11 @@ export const AppNavigator = () => {
                         <Stack.Screen
                             name="AddBudget"
                             component={AddBudgetScreen}
+                            options={{ presentation: 'modal' }}
+                        />
+                        <Stack.Screen
+                            name="AddGoal"
+                            component={AddGoalScreen}
                             options={{ presentation: 'modal' }}
                         />
                     </>
