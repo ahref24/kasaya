@@ -27,6 +27,8 @@ interface FinanceContextType {
 
     clearAllData: () => Promise<void>;
 
+    importData: (data: { transactions: Transaction[]; budgets: Budget[]; goals: Goal[]; categories: Category[]; settings: Settings }) => Promise<void>;
+
     // Computed
     totalIncome: number;
     totalExpenses: number;
@@ -148,6 +150,22 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
+    const importData = async (data: { transactions: Transaction[]; budgets: Budget[]; goals: Goal[]; categories: Category[]; settings: Settings }) => {
+        setTransactions(data.transactions);
+        setBudgets(data.budgets);
+        setGoals(data.goals);
+        setCategories(data.categories);
+        setSettings(data.settings);
+
+        await Promise.all([
+            Storage.saveTransactions(data.transactions),
+            Storage.saveBudgets(data.budgets),
+            Storage.saveGoals(data.goals),
+            Storage.saveCategories(data.categories),
+            Storage.saveSettings(data.settings),
+        ]);
+    };
+
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
     const availableBalance = totalIncome - totalExpenses;
@@ -171,6 +189,7 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
             deleteGoal,
             updateSettings,
             clearAllData,
+            importData,
             totalIncome,
             totalExpenses,
             availableBalance

@@ -1,12 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { exportBackup, importBackup } from '../utils/backup';
 
 export default function SettingsScreen() {
-    const { settings, clearAllData } = useFinance();
+    const { settings, clearAllData, transactions, budgets, goals, categories, importData } = useFinance();
+    const [importing, setImporting] = useState(false);
+
+    const handleExport = async () => {
+        try {
+            await exportBackup(transactions, budgets, goals, categories, settings);
+        } catch (error: any) {
+            Alert.alert('Export Failed', error?.message || 'Failed to export backup.');
+        }
+    };
+
+    const handleImport = async () => {
+        setImporting(true);
+        try {
+            const data = await importBackup();
+            if (!data) {
+                setImporting(false);
+                return;
+            }
+
+            Alert.alert(
+                'Import Backup',
+                'This will overwrite all current data. Are you sure?',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Import',
+                        style: 'destructive',
+                        onPress: async () => {
+                            try {
+                                await importData(data);
+                                Alert.alert('Success', 'Backup imported successfully!');
+                            } catch (error) {
+                                Alert.alert('Error', 'Failed to import backup.');
+                            } finally {
+                                setImporting(false);
+                            }
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            Alert.alert('Error', 'Failed to import backup. Please check the file format.');
+            setImporting(false);
+        }
+    };
 
     const handleClearData = () => {
         Alert.alert(
@@ -43,6 +89,22 @@ export default function SettingsScreen() {
                             <Text style={styles.rowLabel}>Currency</Text>
                             <Text style={styles.rowValue}>{settings.currency} ({settings.currencySymbol})</Text>
                         </View>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Backup</Text>
+                    <View style={styles.card}>
+                        <TouchableOpacity style={styles.actionRow} onPress={handleExport}>
+                            <Ionicons name="cloud-upload-outline" size={20} color={theme.colors.primary} />
+                            <Text style={[styles.actionText, { color: theme.colors.primary }]}>Export Backup</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionRow} onPress={handleImport} disabled={importing}>
+                            <Ionicons name="cloud-download-outline" size={20} color={theme.colors.primary} />
+                            <Text style={[styles.actionText, { color: theme.colors.primary }]}>
+                                {importing ? 'Importing...' : 'Import Backup'}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
