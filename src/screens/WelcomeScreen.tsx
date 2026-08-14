@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
-import { Ionicons } from '@expo/vector-icons';
+
+const kasayaLogo = require('../../assets/kasaya.png');
 
 export default function WelcomeScreen() {
     const { updateSettings } = useFinance();
@@ -20,11 +21,8 @@ export default function WelcomeScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
                 <View style={styles.header}>
-                    <Text style={styles.logo}>KASAYA</Text>
-                    <Ionicons name="leaf" size={24} color={theme.colors.primary} />
+                    <Image source={kasayaLogo} style={styles.logoImage} resizeMode="contain" />
                 </View>
-
-                <View style={styles.spacing} />
 
                 <Text style={styles.label}>What should we call you? (Optional)</Text>
                 <TextInput
@@ -64,17 +62,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     header: {
-        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: theme.spacing.xl * 2,
     },
-    logo: {
-        fontSize: theme.typography.h1.fontSize,
-        fontWeight: '800',
-        color: theme.colors.primaryDark,
-        marginRight: theme.spacing.sm,
-        letterSpacing: 2,
+    logoImage: {
+        width: 260,
+        height: 160,
     },
     spacing: {
         height: theme.spacing.xl,
