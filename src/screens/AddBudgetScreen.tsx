@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
@@ -9,14 +9,29 @@ import { theme } from '../constants/theme';
 export default function AddBudgetScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<any>();
-    const { categories, addBudget } = useFinance();
+    const { categories, addBudget, updateBudget, budgets } = useFinance();
 
     const [amount, setAmount] = useState('');
     const [name, setName] = useState('');
     const [categoryId, setCategoryId] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const route = useRoute<any>();
 
     // Budgets are typically for expenses
     const relevantCategories = categories.filter(c => c.type === 'expense');
+
+    useEffect(() => {
+    const budgetId = route.params?.budgetId;
+        if (budgetId) {
+            const existing = budgets.find(b => b.id === budgetId);
+            if (existing) {
+                setName(existing.name);
+                setAmount(existing.amount.toString());
+                setCategoryId(existing.categoryId || '');
+                setIsEditing(true);
+            }
+        }
+    }, [route.params?.budgetId, budgets]);
 
     const handleSave = async () => {
         if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -28,18 +43,27 @@ export default function AddBudgetScreen() {
             return;
         }
 
+        const existingBudget = isEditing ? budgets.find(b => b.id === route.params.budgetId) : null;
+
+        const budgetData = {
+            id: isEditing ? route.params.budgetId : Date.now().toString(),
+            name,
+            amount: Number(amount),
+            categoryId: categoryId || undefined,
+            period: existingBudget?.period || 'monthly' as const,
+            startDate: existingBudget?.startDate || new Date().toISOString(),
+            endDate: existingBudget?.endDate,
+        };
+
         try {
-            await addBudget({
-                id: Date.now().toString(),
-                name,
-                amount: Number(amount),
-                categoryId: categoryId || undefined,
-                period: 'monthly',
-                startDate: new Date().toISOString(),
-            });
+            if (isEditing) {
+                await updateBudget(budgetData);
+            } else {
+                await addBudget(budgetData);
+            }
             navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', 'Failed to save budget.');
+            Alert.alert('Error', isEditing ? 'Failed to update budget.' : 'Failed to save budget.');
         }
     };
 
@@ -72,7 +96,7 @@ export default function AddBudgetScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="close" size={28} color={theme.colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>New Budget</Text>
+                <Text style={styles.headerTitle}>{isEditing ? 'Edit Budget' : 'New Budget'}</Text>
                 <View style={{ width: 28 }} />
             </View>
 

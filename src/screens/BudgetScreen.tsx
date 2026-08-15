@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import { formatCurrency } from '../utils/currency';
 
 export default function BudgetScreen() {
     const navigation = useNavigation<any>();
+    const route = useRoute<any>();
     const { budgets, transactions, settings, categories, deleteBudget } = useFinance();
 
     const currentMonth = new Date().getMonth();
@@ -24,6 +25,10 @@ export default function BudgetScreen() {
             .reduce((acc, t) => acc + t.amount, 0);
     };
 
+    const handleEdit = (item: typeof budgets[0]) => {
+        navigation.navigate('AddBudget', { budgetId: item.id });
+    };
+
     const renderItem = ({ item }: { item: typeof budgets[0] }) => {
         const spent = getBudgetExpenses(item.categoryId);
         const progress = Math.min((spent / item.amount) * 100, 100);
@@ -33,14 +38,19 @@ export default function BudgetScreen() {
             <View style={styles.budgetCard}>
                 <View style={styles.budgetHeader}>
                     <Text style={styles.budgetName}>{item.name}</Text>
-                    <TouchableOpacity onPress={() => {
-                        Alert.alert('Delete Budget', 'Are you sure?', [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Delete', onPress: () => deleteBudget(item.id), style: 'destructive' }
-                        ]);
-                    }}>
-                        <Text style={styles.deleteText}>Delete</Text>
-                    </TouchableOpacity>
+                    <View style={styles.budgetActions}>
+                        <TouchableOpacity onPress={() => handleEdit(item)}>
+                            <Text style={styles.editText}>Edit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {
+                            Alert.alert('Delete Budget', 'Are you sure?', [
+                                { text: 'Cancel', style: 'cancel' },
+                                { text: 'Delete', onPress: () => deleteBudget(item.id), style: 'destructive' }
+                            ]);
+                        }}>
+                            <Text style={styles.deleteText}>Delete</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
                 <View style={styles.budgetAmounts}>
                     <Text style={styles.limitText}>{formatCurrency(item.amount, settings.currencySymbol)}</Text>
@@ -88,8 +98,8 @@ const styles = StyleSheet.create({
     addBtnText: { color: theme.colors.primary, fontWeight: '600', fontSize: theme.typography.bodyLarge.fontSize },
     list: { padding: theme.spacing.lg, gap: theme.spacing.md },
     budgetCard: { backgroundColor: theme.colors.card, padding: theme.spacing.md, borderRadius: theme.borderRadius.md, ...theme.shadows.small },
-    budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: theme.spacing.sm },
-    budgetName: { fontSize: theme.typography.bodyLarge.fontSize, fontWeight: '600' },
+    budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm },
+    budgetName: { fontSize: theme.typography.bodyLarge.fontSize, fontWeight: '600', flex: 1 },
     deleteText: { color: theme.colors.expense, fontSize: theme.typography.bodySmall.fontSize },
     budgetAmounts: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: theme.spacing.xs },
     limitText: { color: theme.colors.textSecondary, fontSize: theme.typography.bodySmall.fontSize },
@@ -100,5 +110,7 @@ const styles = StyleSheet.create({
     progressText: { textAlign: 'right', fontSize: theme.typography.caption.fontSize, color: theme.colors.textSecondary },
     emptyState: { alignItems: 'center', padding: theme.spacing.xl, marginTop: theme.spacing.xl },
     emptyStateText: { fontSize: theme.typography.bodyLarge.fontSize, fontWeight: '600', marginBottom: theme.spacing.xs },
-    emptyStateSubtext: { fontSize: theme.typography.bodySmall.fontSize, color: theme.colors.textSecondary }
+    emptyStateSubtext: { fontSize: theme.typography.bodySmall.fontSize, color: theme.colors.textSecondary },
+    budgetActions: { flexDirection: 'row', gap: theme.spacing.md },
+    editText: { color: theme.colors.primary, fontSize: theme.typography.bodySmall.fontSize, fontWeight: '600' },
 });

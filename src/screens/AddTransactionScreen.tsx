@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,14 +13,30 @@ export default function AddTransactionScreen() {
     const route = useRoute<any>();
     const { type: initialType } = route.params || { type: 'expense' };
 
-    const { categories, addTransaction } = useFinance();
+    const { categories, addTransaction, updateTransaction, transactions } = useFinance();
 
     const [type, setType] = useState<'income' | 'expense'>(initialType);
+    const [isEditing, setIsEditing] = useState(false);
     const [amount, setAmount] = useState('');
     const [title, setTitle] = useState('');
     const [categoryId, setCategoryId] = useState('');
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+
+    useEffect(() => {
+        const transactionId = route.params?.transactionId;
+        if (transactionId) {
+            const existing = transactions.find(t => t.id === transactionId);
+            if (existing) {
+                setType(existing.type);
+                setAmount(existing.amount.toString());
+                setTitle(existing.title);
+                setCategoryId(existing.categoryId);
+                setDate(new Date(existing.date));
+                setIsEditing(true);
+            }
+        }
+    }, [route.params?.transactionId, transactions]);
 
     const relevantCategories = categories.filter(c => c.type === type);
 
@@ -38,19 +54,30 @@ export default function AddTransactionScreen() {
             return;
         }
 
+        const existingTx = isEditing ? transactions.find(t => t.id === route.params.transactionId) : null;
+
+        const transactionData = {
+            id: isEditing ? route.params.transactionId : Date.now().toString(),
+            type,
+            amount: Number(amount),
+            title,
+            categoryId,
+            date: date.toISOString(),
+            createdAt: existingTx?.createdAt || new Date().toISOString(),
+            notes: existingTx?.notes,
+            paymentMethod: existingTx?.paymentMethod,
+            recurring: existingTx?.recurring,
+        };
+
         try {
-            await addTransaction({
-                id: Date.now().toString(),
-                type,
-                amount: Number(amount),
-                title,
-                categoryId,
-                date: date.toISOString(),
-                createdAt: new Date().toISOString(),
-            });
+            if (isEditing) {
+                await updateTransaction(transactionData);
+            } else {
+                await addTransaction(transactionData);
+            }
             navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', 'Failed to save transaction.');
+            Alert.alert('Error', isEditing ? 'Failed to update transaction.' : 'Failed to save transaction.');
         }
     };
 
@@ -87,7 +114,7 @@ export default function AddTransactionScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="close" size={28} color={theme.colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>New Transaction</Text>
+                <Text style={styles.headerTitle}>{isEditing ? 'Edit Transaction' : 'New Transaction'}</Text>
                 <View style={{ width: 28 }} />
             </View>
 

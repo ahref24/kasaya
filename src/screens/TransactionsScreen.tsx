@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFinance } from '../context/FinanceContext';
@@ -11,7 +11,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 export default function TransactionsScreen() {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    const { transactions, categories, settings } = useFinance();
+    const { transactions, categories, settings, deleteTransaction } = useFinance();
     const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
     const [search, setSearch] = useState('');
     const [startDate, setStartDate] = useState<Date | null>(null);
@@ -57,7 +57,20 @@ export default function TransactionsScreen() {
     };
 
     const renderItem = ({ item }: { item: typeof transactions[0] }) => (
-        <View style={styles.transactionItem}>
+        <TouchableOpacity
+            style={styles.transactionItem}
+            onPress={() => {
+                Alert.alert(
+                    item.title,
+                    formatCurrency(item.amount, settings.currencySymbol),
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Edit', onPress: () => handleEdit(item) },
+                        { text: 'Delete', onPress: () => handleDelete(item.id), style: 'destructive' }
+                    ]
+                );
+            }}
+        >
             <View style={styles.transactionLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: item.type === 'income' ? '#e6f4ea' : '#fce8e8' }]}>
                     <Ionicons name={getCategoryIcon(item.categoryId) as any} size={20} color={item.type === 'income' ? theme.colors.income : theme.colors.expense} />
@@ -72,12 +85,23 @@ export default function TransactionsScreen() {
             <Text style={[styles.transactionAmount, { color: item.type === 'income' ? theme.colors.income : theme.colors.text }]}>
                 {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount, settings.currencySymbol)}
             </Text>
-        </View>
+        </TouchableOpacity>
     );
 
     const formatDate = (date: Date | null) => {
         if (!date) return 'Select date';
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const handleDelete = (id: string) => {
+        Alert.alert('Delete Transaction', 'Are you sure you want to delete this transaction?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', onPress: () => deleteTransaction(id), style: 'destructive' }
+        ]);
+    };
+
+    const handleEdit = (item: typeof transactions[0]) => {
+        navigation.navigate('AddTransaction', { transactionId: item.id, type: item.type });
     };
 
     const clearDateFilter = () => {
