@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
@@ -13,6 +13,11 @@ export default function GoalsScreen() {
     const [progressModalVisible, setProgressModalVisible] = useState(false);
     const [selectedGoal, setSelectedGoal] = useState<typeof goals[0] | null>(null);
     const [progressAmount, setProgressAmount] = useState('');
+    const route = useRoute<any>();
+
+    const handleEdit = (item: typeof goals[0]) => {
+        navigation.navigate('AddGoal', { goalId: item.id });
+    };
 
     const getDaysRemaining = (targetDate?: string) => {
         if (!targetDate) return null;
@@ -70,14 +75,19 @@ export default function GoalsScreen() {
                         </View>
                         <Text style={styles.goalName}>{item.name}</Text>
                     </View>
-                    <TouchableOpacity onPress={() => {
-                        Alert.alert('Delete Goal', 'Are you sure?', [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Delete', onPress: () => deleteGoal(item.id), style: 'destructive' }
-                        ]);
-                    }}>
-                        <Ionicons name="trash-outline" size={20} color={theme.colors.expense} />
-                    </TouchableOpacity>
+                    <View style={styles.goalActions}>
+                        <TouchableOpacity onPress={() => handleEdit(item)}>
+                            <Text style={styles.editText}>Edit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {
+                            Alert.alert('Delete Goal', 'Are you sure?', [
+                                { text: 'Cancel', style: 'cancel' },
+                                { text: 'Delete', onPress: () => deleteGoal(item.id), style: 'destructive' }
+                            ]);
+                        }}>
+                            <Ionicons name="trash-outline" size={20} color={theme.colors.expense} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {item.description && (
@@ -245,5 +255,7 @@ const styles = StyleSheet.create({
     modalCancelBtn: { flex: 1, paddingVertical: theme.spacing.sm, borderRadius: theme.borderRadius.md, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center' },
     modalCancelText: { color: theme.colors.text, fontWeight: '600' },
     modalConfirmBtn: { flex: 1, paddingVertical: theme.spacing.sm, borderRadius: theme.borderRadius.md, backgroundColor: theme.colors.primary, alignItems: 'center' },
-    modalConfirmText: { color: theme.colors.white, fontWeight: '600' }
+    modalConfirmText: { color: theme.colors.white, fontWeight: '600' },
+    goalActions: { flexDirection: 'row', gap: theme.spacing.md },
+    editText: { color: theme.colors.primary, fontSize: theme.typography.bodySmall.fontSize, fontWeight: '600' },
 });

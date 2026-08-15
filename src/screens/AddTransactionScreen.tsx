@@ -87,22 +87,17 @@ export default function AddTransactionScreen() {
 
     const formatAmountInput = (value: string): string => {
         if (!value) return '';
-        
-        // Keep only digits and decimal point
+
         const cleaned = value.replace(/[^0-9.]/g, '');
         const parts = cleaned.split('.');
-        
-        // Handle multiple decimal points (keep only the first)
         const integerPart = parts[0];
         const decimalPart = parts.slice(1).join('');
-        
-        // Format integer part with commas
         const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        
-        // Limit to 2 decimal places
         const truncatedDecimal = decimalPart.slice(0, 2);
         
-        if (decimalPart) {
+        const hasTrailingDot = cleaned.endsWith('.');
+
+        if (hasTrailingDot || truncatedDecimal) {
             return `${formattedInteger}.${truncatedDecimal}`;
         }
         return formattedInteger;
@@ -141,6 +136,7 @@ export default function AddTransactionScreen() {
                             style={styles.amountInput}
                             placeholder="0.00"
                             keyboardType="decimal-pad"
+                            inputMode="decimal"
                             value={formatAmountInput(amount)}
                             onChangeText={(text) => setAmount(text.replace(/,/g, ''))}
                             autoFocus

@@ -105,7 +105,9 @@ export default function AddBudgetScreen() {
         const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         const truncatedDecimal = decimalPart.slice(0, 2);
         
-        if (decimalPart) {
+        const hasTrailingDot = cleaned.endsWith('.');
+
+        if (hasTrailingDot || truncatedDecimal) {
             return `${formattedInteger}.${truncatedDecimal}`;
         }
         return formattedInteger;
@@ -129,6 +131,7 @@ export default function AddBudgetScreen() {
                             style={styles.amountInput}
                             placeholder="0.00"
                             keyboardType="decimal-pad"
+                            inputMode="decimal"
                             value={formatAmountInput(amount)}
                             onChangeText={(text) => setAmount(text.replace(/,/g, ''))}
                             autoFocus

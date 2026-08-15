@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
@@ -15,7 +15,9 @@ const ICONS = [
 export default function AddGoalScreen() {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
-    const { addGoal } = useFinance();
+    const { addGoal, updateGoal, goals } = useFinance();
+    const [isEditing, setIsEditing] = useState(false);
+    const route = useRoute<any>();
 
     const [name, setName] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
@@ -23,6 +25,21 @@ export default function AddGoalScreen() {
     const [targetDate, setTargetDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedIcon, setSelectedIcon] = useState('flag');
+
+    useEffect(() => {
+        const goalId = route.params?.goalId;
+        if (goalId) {
+            const existing = goals.find(g => g.id === goalId);
+            if (existing) {
+                setName(existing.name);
+                setTargetAmount(existing.targetAmount.toString());
+                setCurrentAmount(existing.currentAmount.toString());
+                setTargetDate(existing.targetDate ? new Date(existing.targetDate) : null);
+                setSelectedIcon(existing.icon || 'flag');
+                setIsEditing(true);
+            }
+        }
+    }, [route.params?.goalId, goals]);
 
     const handleSave = async () => {
         if (!name.trim()) {
@@ -34,19 +51,27 @@ export default function AddGoalScreen() {
             return;
         }
 
+        const existingGoal = isEditing ? goals.find(g => g.id === route.params.goalId) : null;
+
+        const goalData = {
+            id: isEditing ? route.params.goalId : Date.now().toString(),
+            name,
+            targetAmount: Number(targetAmount),
+            currentAmount: currentAmount ? Number(currentAmount) : 0,
+            targetDate: targetDate ? targetDate.toISOString() : undefined,
+            icon: selectedIcon,
+            createdAt: existingGoal?.createdAt || new Date().toISOString(),
+        };
+
         try {
-            await addGoal({
-                id: Date.now().toString(),
-                name,
-                targetAmount: Number(targetAmount),
-                currentAmount: currentAmount ? Number(currentAmount) : 0,
-                targetDate: targetDate ? targetDate.toISOString() : undefined,
-                icon: selectedIcon,
-                createdAt: new Date().toISOString(),
-            });
+            if (isEditing) {
+                await updateGoal(goalData);
+            } else {
+                await addGoal(goalData);
+            }
             navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', 'Failed to save goal.');
+            Alert.alert('Error', isEditing ? 'Failed to update goal.' : 'Failed to save goal.');
         }
     };
 
@@ -57,22 +82,17 @@ export default function AddGoalScreen() {
 
     const formatAmountInput = (value: string): string => {
         if (!value) return '';
-        
-        // Keep only digits and decimal point
+
         const cleaned = value.replace(/[^0-9.]/g, '');
         const parts = cleaned.split('.');
-        
-        // Handle multiple decimal points (keep only the first)
         const integerPart = parts[0];
         const decimalPart = parts.slice(1).join('');
-        
-        // Format integer part with commas
         const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        
-        // Limit to 2 decimal places
         const truncatedDecimal = decimalPart.slice(0, 2);
         
-        if (decimalPart) {
+        const hasTrailingDot = cleaned.endsWith('.');
+
+        if (hasTrailingDot || truncatedDecimal) {
             return `${formattedInteger}.${truncatedDecimal}`;
         }
         return formattedInteger;
@@ -84,7 +104,7 @@ export default function AddGoalScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="close" size={28} color={theme.colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>New Goal</Text>
+                <Text style={styles.headerTitle}>{isEditing ? 'Edit Goal' : 'New Goal'}</Text>
                 <View style={{ width: 28 }} />
             </View>
 
@@ -107,6 +127,7 @@ export default function AddGoalScreen() {
                             style={styles.amountInput}
                             placeholder="0.00"
                             keyboardType="decimal-pad"
+                            inputMode="decimal"
                             value={formatAmountInput(targetAmount)}
                             onChangeText={(text) => setTargetAmount(text.replace(/,/g, ''))}
                             autoFocus
@@ -120,6 +141,7 @@ export default function AddGoalScreen() {
                             style={styles.amountInput}
                             placeholder="0.00"
                             keyboardType="decimal-pad"
+                            inputMode="decimal"
                             value={formatAmountInput(currentAmount)}
                             onChangeText={(text) => setCurrentAmount(text.replace(/,/g, ''))}
                         />
@@ -171,7 +193,7 @@ export default function AddGoalScreen() {
             <View style={styles.footer}>
                 <View style={{ paddingBottom: Math.max(insets.bottom, theme.spacing.md) }}>
                     <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                        <Text style={styles.saveBtnText}>Create Goal</Text>
+                        <Text style={styles.saveBtnText}>{isEditing ? 'Update Goal' : 'Create Goal'}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#004D40",
+      "image": "./assets/kasaya-splash.png",
+      "resizeMode": "contain"
+    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
