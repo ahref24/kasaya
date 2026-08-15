@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
@@ -9,23 +9,22 @@ import { theme } from '../constants/theme';
 export default function AddBudgetScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<any>();
-    const { categories, addBudget, updateBudget, budgets } = useFinance();
+    const { categories, addBudget, updateBudget, budgets, addCategory } = useFinance();
 
     const [amount, setAmount] = useState('');
-    const [name, setName] = useState('');
     const [categoryId, setCategoryId] = useState('');
     const [isEditing, setIsEditing] = useState(false);
+    const [customName, setCustomName] = useState('');
+    const [showCustomInput, setShowCustomInput] = useState(false);
     const route = useRoute<any>();
 
-    // Budgets are typically for expenses
     const relevantCategories = categories.filter(c => c.type === 'expense');
 
     useEffect(() => {
-    const budgetId = route.params?.budgetId;
+        const budgetId = route.params?.budgetId;
         if (budgetId) {
             const existing = budgets.find(b => b.id === budgetId);
             if (existing) {
-                setName(existing.name);
                 setAmount(existing.amount.toString());
                 setCategoryId(existing.categoryId || '');
                 setIsEditing(true);
@@ -38,8 +37,14 @@ export default function AddBudgetScreen() {
             Alert.alert('Invalid Amount', 'Please enter a valid amount greater than zero.');
             return;
         }
-        if (!name.trim()) {
-            Alert.alert('Missing Name', 'Please enter a name for this budget.');
+        if (!categoryId) {
+            Alert.alert('Missing Category', 'Please select a category.');
+            return;
+        }
+
+        const selectedCategory = categories.find(c => c.id === categoryId);
+        if (!selectedCategory) {
+            Alert.alert('Error', 'Selected category not found.');
             return;
         }
 
@@ -47,9 +52,9 @@ export default function AddBudgetScreen() {
 
         const budgetData = {
             id: isEditing ? route.params.budgetId : Date.now().toString(),
-            name,
+            name: selectedCategory.name,
             amount: Number(amount),
-            categoryId: categoryId || undefined,
+            categoryId: selectedCategory.id,
             period: existingBudget?.period || 'monthly' as const,
             startDate: existingBudget?.startDate || new Date().toISOString(),
             endDate: existingBudget?.endDate,
@@ -67,21 +72,37 @@ export default function AddBudgetScreen() {
         }
     };
 
+    const handleCreateCustomCategory = async () => {
+        if (!customName.trim()) {
+            Alert.alert('Missing Name', 'Please enter a category name.');
+            return;
+        }
+
+        const newCategory = {
+            id: `exp_custom_${Date.now()}`,
+            name: customName.trim(),
+            type: 'expense' as const,
+            icon: 'ellipsis-horizontal',
+        };
+
+        try {
+            await addCategory(newCategory);
+            setCategoryId(newCategory.id);
+            setCustomName('');
+            setShowCustomInput(false);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to create custom category.');
+        }
+    };
+
     const formatAmountInput = (value: string): string => {
         if (!value) return '';
-        
-        // Keep only digits and decimal point
+
         const cleaned = value.replace(/[^0-9.]/g, '');
         const parts = cleaned.split('.');
-        
-        // Handle multiple decimal points (keep only the first)
         const integerPart = parts[0];
         const decimalPart = parts.slice(1).join('');
-        
-        // Format integer part with commas
         const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        
-        // Limit to 2 decimal places
         const truncatedDecimal = decimalPart.slice(0, 2);
         
         if (decimalPart) {
@@ -115,23 +136,16 @@ export default function AddBudgetScreen() {
                     </View>
 
                     <View style={styles.field}>
-                        <Text style={styles.label}>Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="e.g. Monthly Groceries"
-                            value={name}
-                            onChangeText={setName}
-                        />
-                    </View>
-
-                    <View style={styles.field}>
-                        <Text style={styles.label}>Category (Optional)</Text>
+                        <Text style={styles.label}>Category</Text>
                         <View style={styles.categoriesContainer}>
                             {relevantCategories.map(cat => (
                                 <TouchableOpacity
                                     key={cat.id}
                                     style={[styles.categoryItem, categoryId === cat.id && styles.categoryItemActive]}
-                                    onPress={() => setCategoryId(cat.id === categoryId ? '' : cat.id)}
+                                    onPress={() => {
+                                        setCategoryId(cat.id);
+                                        setShowCustomInput(false);
+                                    }}
                                 >
                                     <View style={[styles.catIconContainer, categoryId === cat.id && { backgroundColor: theme.colors.white }]}>
                                         <Ionicons
@@ -145,15 +159,50 @@ export default function AddBudgetScreen() {
                                     </Text>
                                 </TouchableOpacity>
                             ))}
+                            
+                            <TouchableOpacity
+                                style={[styles.categoryItem, showCustomInput && styles.categoryItemActive]}
+                                onPress={() => setShowCustomInput(!showCustomInput)}
+                            >
+                                <View style={[styles.catIconContainer, showCustomInput && { backgroundColor: theme.colors.white }]}>
+                                    <Ionicons
+                                        name="add"
+                                        size={20}
+                                        color={showCustomInput ? theme.colors.primary : theme.colors.textSecondary}
+                                    />
+                                </View>
+                                <Text style={[styles.categoryText, showCustomInput && styles.categoryTextActive]}>
+                                    Custom
+                                </Text>
+                            </TouchableOpacity>
                         </View>
+
+                        {showCustomInput && (
+                            <View style={styles.customCategoryInput}>
+                                <TextInput
+                                    style={styles.customInput}
+                                    placeholder="Enter category name"
+                                    value={customName}
+                                    onChangeText={setCustomName}
+                                    autoFocus
+                                />
+                                <TouchableOpacity style={styles.customAddBtn} onPress={handleCreateCustomCategory}>
+                                    <Ionicons name="checkmark" size={20} color={theme.colors.white} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
 
             <View style={styles.footer}>
                 <View style={{ paddingBottom: Math.max(insets.bottom, theme.spacing.md) }}>
-                    <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                        <Text style={styles.saveBtnText}>Save Budget</Text>
+                    <TouchableOpacity 
+                        style={[styles.saveBtn, !categoryId && styles.saveBtnDisabled]} 
+                        onPress={handleSave}
+                        disabled={!categoryId}
+                    >
+                        <Text style={styles.saveBtnText}>{isEditing ? 'Update Budget' : 'Save Budget'}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -209,14 +258,6 @@ const styles = StyleSheet.create({
         color: theme.colors.text,
         marginBottom: theme.spacing.sm,
     },
-    input: {
-        backgroundColor: theme.colors.card,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.md,
-        fontSize: theme.typography.body.fontSize,
-    },
     categoriesContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -252,6 +293,29 @@ const styles = StyleSheet.create({
         color: theme.colors.white,
         fontWeight: '600',
     },
+    customCategoryInput: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: theme.spacing.md,
+        gap: theme.spacing.sm,
+    },
+    customInput: {
+        flex: 1,
+        backgroundColor: theme.colors.card,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        borderRadius: theme.borderRadius.md,
+        padding: theme.spacing.md,
+        fontSize: theme.typography.body.fontSize,
+    },
+    customAddBtn: {
+        backgroundColor: theme.colors.primary,
+        width: 48,
+        height: 48,
+        borderRadius: theme.borderRadius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     footer: {
         paddingHorizontal: theme.spacing.lg,
         paddingTop: theme.spacing.lg,
@@ -263,6 +327,9 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         borderRadius: theme.borderRadius.md,
         alignItems: 'center',
+    },
+    saveBtnDisabled: {
+        backgroundColor: theme.colors.border,
     },
     saveBtnText: {
         color: theme.colors.white,

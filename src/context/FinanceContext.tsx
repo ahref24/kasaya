@@ -19,6 +19,9 @@ interface FinanceContextType {
     updateBudget: (b: Budget) => Promise<void>;
     deleteBudget: (id: string) => Promise<void>;
 
+    // Add to the interface (after line 20):
+    addCategory: (c: Category) => Promise<void>;
+
     addGoal: (g: Goal) => Promise<void>;
     updateGoal: (g: Goal) => Promise<void>;
     deleteGoal: (id: string) => Promise<void>;
@@ -91,6 +94,13 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         const newData = transactions.filter(x => x.id !== id);
         setTransactions(newData);
         await Storage.saveTransactions(newData);
+    };
+
+    // Add implementation (after deleteBudget, around line 94):
+    const addCategory = async (c: Category) => {
+        const newData = [...categories, c];
+        setCategories(newData);
+        await Storage.saveCategories(newData);
     };
 
     const addBudget = async (b: Budget) => {
@@ -178,6 +188,7 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
             categories,
             settings,
             isLoading,
+            addCategory,
             addTransaction,
             updateTransaction,
             deleteTransaction,
