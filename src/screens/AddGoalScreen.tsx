@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
@@ -14,6 +14,7 @@ const ICONS = [
 
 export default function AddGoalScreen() {
     const navigation = useNavigation<any>();
+    const insets = useSafeAreaInsets();
     const { addGoal } = useFinance();
 
     const [name, setName] = useState('');
@@ -144,9 +145,11 @@ export default function AddGoalScreen() {
             </KeyboardAvoidingView>
 
             <View style={styles.footer}>
-                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                    <Text style={styles.saveBtnText}>Create Goal</Text>
-                </TouchableOpacity>
+                <View style={{ paddingBottom: Math.max(insets.bottom, theme.spacing.md) }}>
+                    <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+                        <Text style={styles.saveBtnText}>Create Goal</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </SafeAreaView>
     );
@@ -248,7 +251,8 @@ const styles = StyleSheet.create({
         borderColor: theme.colors.primary,
     },
     footer: {
-        padding: theme.spacing.lg,
+        paddingHorizontal: theme.spacing.lg,
+        paddingTop: theme.spacing.lg,
         borderTopWidth: 1,
         borderColor: theme.colors.border,
     },

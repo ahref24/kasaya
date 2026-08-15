@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function AddTransactionScreen() {
+    const insets = useSafeAreaInsets();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const { type: initialType } = route.params || { type: 'expense' };
@@ -154,9 +155,11 @@ export default function AddTransactionScreen() {
             </KeyboardAvoidingView>
 
             <View style={styles.footer}>
-                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                    <Text style={styles.saveBtnText}>Save Transaction</Text>
-                </TouchableOpacity>
+                <View style={{ paddingBottom: Math.max(insets.bottom, theme.spacing.md) }}>
+                    <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+                        <Text style={styles.saveBtnText}>Save Transaction</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </SafeAreaView>
     );
@@ -295,7 +298,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     footer: {
-        padding: theme.spacing.lg,
+        paddingHorizontal: theme.spacing.lg,
+        paddingTop: theme.spacing.lg,
         borderTopWidth: 1,
         borderColor: theme.colors.border,
     },

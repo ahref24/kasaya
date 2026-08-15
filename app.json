@@ -15,7 +15,8 @@
         "backgroundImage": "./assets/icon.png",
         "backgroundColor": "#E6F4FE"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.maccom24.kasaya"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -24,6 +25,11 @@
       "expo-asset",
       "expo-font",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9c723060-a91c-4abd-9426-d6b55b7ba1d5"
+      }
+    }
   }
 }
