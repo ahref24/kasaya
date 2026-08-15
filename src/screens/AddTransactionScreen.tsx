@@ -13,13 +13,15 @@ export default function AddTransactionScreen() {
     const route = useRoute<any>();
     const { type: initialType } = route.params || { type: 'expense' };
 
-    const { categories, addTransaction, updateTransaction, transactions } = useFinance();
+    const { categories, addTransaction, updateTransaction, transactions, addCategory } = useFinance();
 
     const [type, setType] = useState<'income' | 'expense'>(initialType);
     const [isEditing, setIsEditing] = useState(false);
     const [amount, setAmount] = useState('');
     const [title, setTitle] = useState('');
     const [categoryId, setCategoryId] = useState('');
+    const [customName, setCustomName] = useState('');
+    const [showCustomInput, setShowCustomInput] = useState(false);
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -103,6 +105,29 @@ export default function AddTransactionScreen() {
         return formattedInteger;
     };
 
+    const handleCreateCustomCategory = async () => {
+        if (!customName.trim()) {
+            Alert.alert('Missing Name', 'Please enter a category name.');
+            return;
+        }
+
+        const newCategory = {
+            id: `${type === 'expense' ? 'exp' : 'inc'}_custom_${Date.now()}`,
+            name: customName.trim(),
+            type,
+            icon: type === 'expense' ? 'ellipsis-horizontal' : 'cash',
+        };
+
+        try {
+            await addCategory(newCategory);
+            setCategoryId(newCategory.id);
+            setCustomName('');
+            setShowCustomInput(false);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to create custom category.');
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -181,7 +206,10 @@ export default function AddTransactionScreen() {
                                 <TouchableOpacity
                                     key={cat.id}
                                     style={[styles.categoryItem, categoryId === cat.id && styles.categoryItemActive]}
-                                    onPress={() => setCategoryId(cat.id)}
+                                    onPress={() => {
+                                        setCategoryId(cat.id);
+                                        setShowCustomInput(false);
+                                    }}
                                 >
                                     <View style={[styles.catIconContainer, categoryId === cat.id && { backgroundColor: theme.colors.white }]}>
                                         <Ionicons
@@ -195,7 +223,38 @@ export default function AddTransactionScreen() {
                                     </Text>
                                 </TouchableOpacity>
                             ))}
+
+                            <TouchableOpacity
+                                style={[styles.categoryItem, showCustomInput && styles.categoryItemActive]}
+                                onPress={() => setShowCustomInput(!showCustomInput)}
+                            >
+                                <View style={[styles.catIconContainer, showCustomInput && { backgroundColor: theme.colors.white }]}>
+                                    <Ionicons
+                                        name="add"
+                                        size={20}
+                                        color={showCustomInput ? theme.colors.primary : theme.colors.textSecondary}
+                                    />
+                                </View>
+                                <Text style={[styles.categoryText, showCustomInput && styles.categoryTextActive]}>
+                                    Custom
+                                </Text>
+                            </TouchableOpacity>
                         </View>
+
+                        {showCustomInput && (
+                            <View style={styles.customCategoryInput}>
+                                <TextInput
+                                    style={styles.customInput}
+                                    placeholder="Enter category name"
+                                    value={customName}
+                                    onChangeText={setCustomName}
+                                    autoFocus
+                                />
+                                <TouchableOpacity style={styles.customAddBtn} onPress={handleCreateCustomCategory}>
+                                    <Ionicons name="checkmark" size={20} color={theme.colors.white} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -359,5 +418,28 @@ const styles = StyleSheet.create({
         color: theme.colors.white,
         fontSize: theme.typography.bodyLarge.fontSize,
         fontWeight: '700',
-    }
+    },
+    customCategoryInput: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: theme.spacing.md,
+        gap: theme.spacing.sm,
+    },
+    customInput: {
+        flex: 1,
+        backgroundColor: theme.colors.card,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        borderRadius: theme.borderRadius.md,
+        padding: theme.spacing.md,
+        fontSize: theme.typography.body.fontSize,
+    },
+    customAddBtn: {
+        backgroundColor: theme.colors.primary,
+        width: 48,
+        height: 48,
+        borderRadius: theme.borderRadius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
