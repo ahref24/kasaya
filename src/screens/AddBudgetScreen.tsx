@@ -43,6 +43,29 @@ export default function AddBudgetScreen() {
         }
     };
 
+    const formatAmountInput = (value: string): string => {
+        if (!value) return '';
+        
+        // Keep only digits and decimal point
+        const cleaned = value.replace(/[^0-9.]/g, '');
+        const parts = cleaned.split('.');
+        
+        // Handle multiple decimal points (keep only the first)
+        const integerPart = parts[0];
+        const decimalPart = parts.slice(1).join('');
+        
+        // Format integer part with commas
+        const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        
+        // Limit to 2 decimal places
+        const truncatedDecimal = decimalPart.slice(0, 2);
+        
+        if (decimalPart) {
+            return `${formattedInteger}.${truncatedDecimal}`;
+        }
+        return formattedInteger;
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -60,9 +83,9 @@ export default function AddBudgetScreen() {
                         <TextInput
                             style={styles.amountInput}
                             placeholder="0.00"
-                            keyboardType="numeric"
-                            value={amount}
-                            onChangeText={setAmount}
+                            keyboardType="decimal-pad"
+                            value={formatAmountInput(amount)}
+                            onChangeText={(text) => setAmount(text.replace(/,/g, ''))}
                             autoFocus
                         />
                     </View>
