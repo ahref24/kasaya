@@ -5,19 +5,14 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "splash": {
-      "backgroundColor": "#004D40",
-      "image": "./assets/kasaya-splash.png",
-      "resizeMode": "contain"
-    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/kasaya-splash.png",
+        "backgroundImage": "./assets/kasaya-splash.png",
         "backgroundColor": "#E6F4FE"
       },
       "predictiveBackGestureEnabled": false,
