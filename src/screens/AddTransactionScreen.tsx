@@ -190,10 +190,10 @@ export default function AddTransactionScreen() {
                     )}
 
                     <View style={styles.field}>
-                        <Text style={styles.label}>Title</Text>
+                        <Text style={styles.label}>{type === 'expense' ? 'Expense' : 'Income'}</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="e.g. Grocery shopping"
+                            placeholder={type === 'expense' ? "e.g. Grocery shopping" : "e.g. Salary"}
                             value={title}
                             onChangeText={setTitle}
                         />

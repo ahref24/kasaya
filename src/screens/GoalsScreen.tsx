@@ -85,7 +85,7 @@ export default function GoalsScreen() {
                                 { text: 'Delete', onPress: () => deleteGoal(item.id), style: 'destructive' }
                             ]);
                         }}>
-                            <Ionicons name="trash-outline" size={20} color={theme.colors.expense} />
+                            <Text style={styles.deleteText}>Delete</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -258,4 +258,5 @@ const styles = StyleSheet.create({
     modalConfirmText: { color: theme.colors.white, fontWeight: '600' },
     goalActions: { flexDirection: 'row', gap: theme.spacing.md },
     editText: { color: theme.colors.primary, fontSize: theme.typography.bodySmall.fontSize, fontWeight: '600' },
+    deleteText: { color: theme.colors.expense, fontSize: theme.typography.bodySmall.fontSize },
 });

@@ -11,8 +11,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/kasaya-splash.png",
-        "backgroundImage": "./assets/kasaya-splash.png",
+        "foregroundImage": "./assets/icon.png",
+        "backgroundImage": "./assets/icon.png",
         "backgroundColor": "#E6F4FE"
       },
       "predictiveBackGestureEnabled": false,

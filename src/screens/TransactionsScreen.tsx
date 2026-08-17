@@ -119,11 +119,16 @@ export default function TransactionsScreen() {
                 <Text style={styles.title}>
                     {activeCategoryName ? activeCategoryName : 'Transactions'}
                 </Text>
-                {activeCategoryName && (
-                    <TouchableOpacity onPress={clearCategoryFilter}>
-                        <Text style={styles.clearFilterText}>Clear</Text>
+                <View style={styles.headerActions}>
+                    {activeCategoryName && (
+                        <TouchableOpacity onPress={clearCategoryFilter}>
+                            <Text style={styles.clearFilterText}>Clear</Text>
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity onPress={() => navigation.navigate('AddTransaction')}>
+                        <Text style={styles.addBtnText}>+ Transaction</Text>
                     </TouchableOpacity>
-                )}
+                </View>
             </View>
 
             <View style={styles.searchContainer}>
@@ -365,5 +370,8 @@ const styles = StyleSheet.create({
     emptyStateText: {
         fontSize: theme.typography.bodyLarge.fontSize,
         color: theme.colors.textSecondary,
-    }
+    },
+    headerActions: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+    addBtnText: { color: theme.colors.primary, fontWeight: '600', fontSize: theme.typography.bodyLarge.fontSize },
+
 });
