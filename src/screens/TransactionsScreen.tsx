@@ -45,7 +45,7 @@ export default function TransactionsScreen() {
 
     // Group by date
     const grouped = filteredTransactions.reduce((acc, t) => {
-        const d = new Date(t.date).toLocaleDateString();
+        const d = new Date(t.date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
         if (!acc[d]) acc[d] = [];
         acc[d].push(t);
         return acc;
@@ -90,7 +90,7 @@ export default function TransactionsScreen() {
 
     const formatDate = (date: Date | null) => {
         if (!date) return 'Select date';
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
     };
 
     const handleDelete = (id: string) => {
@@ -112,6 +112,8 @@ export default function TransactionsScreen() {
     const clearCategoryFilter = () => {
         navigation.setParams({ categoryId: undefined, month: undefined, year: undefined });
     };
+
+    const today = new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
 
     return (
         <SafeAreaView style={styles.container}>
@@ -204,12 +206,27 @@ export default function TransactionsScreen() {
                 <FlatList
                     data={Object.keys(grouped).map(k => ({ title: k, data: grouped[k] }))}
                     keyExtractor={item => item.title}
-                    renderItem={({ item }) => (
-                        <View style={styles.group}>
-                            <Text style={styles.groupTitle}>{item.title === new Date().toLocaleDateString() ? 'TODAY' : item.title}</Text>
-                            {item.data.map(t => <React.Fragment key={t.id}>{renderItem({ item: t })}</React.Fragment>)}
-                        </View>
-                    )}
+                    renderItem={({ item }) => {
+                        const dailyTotal = item.data.reduce((sum, t) => {
+                            return sum + (t.type === 'income' ? t.amount : -t.amount);
+                        }, 0);
+
+                        return (
+                            <View style={styles.group}>
+                                <View style={styles.groupHeader}>
+                                    <Text style={styles.groupTitle}>{item.title}</Text>
+                                    <Text style={[
+                                        styles.dailyTotal,
+                                        { color: dailyTotal >= 0 ? theme.colors.income : theme.colors.expense }
+                                    ]}>
+                                        {formatCurrency(Math.abs(dailyTotal), settings.currencySymbol)}
+                                        {dailyTotal < 0 ? ' spent' : dailyTotal > 0 ? ' earned' : ''}
+                                    </Text>
+                                </View>
+                                {item.data.map(t => <React.Fragment key={t.id}>{renderItem({ item: t })}</React.Fragment>)}
+                            </View>
+                        );
+                    }}
                     contentContainerStyle={styles.listContainer}
                 />
             )}
@@ -373,5 +390,7 @@ const styles = StyleSheet.create({
     },
     headerActions: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
     addBtnText: { color: theme.colors.primary, fontWeight: '600', fontSize: theme.typography.bodyLarge.fontSize },
+    groupHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm },
+    dailyTotal: { fontSize: theme.typography.bodySmall.fontSize, fontWeight: '600' },
 
 });

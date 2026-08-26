@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFinance } from '../context/FinanceContext';
 import { theme } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { exportBackup, importBackup } from '../utils/backup';
+import { ALL_DEFAULT_CATEGORIES } from '../constants/categories';
 
 export default function SettingsScreen() {
-    const { settings, clearAllData, transactions, budgets, goals, categories, importData } = useFinance();
+    const { settings, clearAllData, transactions, budgets, goals, categories, importData, deleteCategory } = useFinance();
     const [importing, setImporting] = useState(false);
 
     const handleExport = async () => {
@@ -65,6 +66,18 @@ export default function SettingsScreen() {
         );
     };
 
+    const handleDeleteCategory = (id: string, name: string) => {
+        Alert.alert('Delete Category', `Are you sure you want to delete "${name}"?`, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', onPress: () => deleteCategory(id), style: 'destructive' }
+        ]);
+    };
+
+    const customCategories = useMemo(() => {
+        const defaultIds = new Set(ALL_DEFAULT_CATEGORIES.map(c => c.id));
+        return categories.filter(c => !defaultIds.has(c.id));
+    }, [categories]);
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView>
@@ -79,6 +92,33 @@ export default function SettingsScreen() {
                             <Text style={styles.rowLabel}>Name</Text>
                             <Text style={styles.rowValue}>{settings.name || 'Set Name'}</Text>
                         </View>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Categories</Text>
+                    <View style={styles.card}>
+                        {customCategories.length === 0 ? (
+                            <View style={styles.row}>
+                                <Text style={[styles.rowValue, { color: theme.colors.textSecondary }]}>
+                                    No custom categories yet. Create one when adding a transaction or budget.
+                                </Text>
+                            </View>
+                        ) : (
+                            customCategories.map(cat => (
+                                <View key={cat.id} style={[styles.row, { borderBottomWidth: 1, borderBottomColor: theme.colors.border }]}>
+                                    <View style={styles.categoryRowContent}>
+                                        <View style={[styles.catIconContainer, { backgroundColor: theme.colors.border }]}>
+                                            <Ionicons name={cat.icon as any} size={18} color={theme.colors.textSecondary} />
+                                        </View>
+                                        <Text style={styles.rowLabel}>{cat.name}</Text>
+                                    </View>
+                                    <TouchableOpacity onPress={() => handleDeleteCategory(cat.id, cat.name)}>
+                                        <Ionicons name="trash-outline" size={18} color={theme.colors.expense} />
+                                    </TouchableOpacity>
+                                </View>
+                            ))
+                        )}
                     </View>
                 </View>
 
@@ -148,5 +188,7 @@ const styles = StyleSheet.create({
     rowLabel: { fontSize: theme.typography.body.fontSize, color: theme.colors.text },
     rowValue: { fontSize: theme.typography.body.fontSize, color: theme.colors.textSecondary },
     actionRow: { flexDirection: 'row', alignItems: 'center', padding: theme.spacing.md },
-    actionText: { fontSize: theme.typography.body.fontSize, marginLeft: theme.spacing.sm }
+    actionText: { fontSize: theme.typography.body.fontSize, marginLeft: theme.spacing.sm },
+    categoryRowContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+catIconContainer: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: theme.spacing.sm },
 });
