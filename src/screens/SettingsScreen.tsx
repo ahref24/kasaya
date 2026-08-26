@@ -8,7 +8,7 @@ import { exportBackup, importBackup } from '../utils/backup';
 import { ALL_DEFAULT_CATEGORIES } from '../constants/categories';
 
 export default function SettingsScreen() {
-    const { settings, clearAllData, transactions, budgets, goals, categories, importData, deleteCategory } = useFinance();
+    const { settings, updateSettings, clearAllData, transactions, budgets, goals, categories, importData, deleteCategory } = useFinance();
     const [importing, setImporting] = useState(false);
 
     const handleExport = async () => {
@@ -73,6 +73,31 @@ export default function SettingsScreen() {
         ]);
     };
 
+    const CURRENCIES = [
+        { code: 'PHP', symbol: '₱', name: 'Philippine Peso' },
+        { code: 'USD', symbol: '$', name: 'US Dollar' },
+        { code: 'EUR', symbol: '€', name: 'Euro' },
+        { code: 'GBP', symbol: '£', name: 'British Pound' },
+        { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+        { code: 'KRW', symbol: '₩', name: 'Korean Won' },
+        { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+        { code: 'THB', symbol: '฿', name: 'Thai Baht' },
+    ];
+
+    const handleChangeCurrency = () => {
+        Alert.alert(
+            'Select Currency',
+            `Current: ${settings.currency} (${settings.currencySymbol})`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                ...CURRENCIES.map(c => ({
+                    text: `${c.code} — ${c.symbol} (${c.name})`,
+                    onPress: () => updateSettings({ currency: c.code, currencySymbol: c.symbol }),
+                }))
+            ]
+        );
+    };
+
     const customCategories = useMemo(() => {
         const defaultIds = new Set(ALL_DEFAULT_CATEGORIES.map(c => c.id));
         return categories.filter(c => !defaultIds.has(c.id));
@@ -123,13 +148,13 @@ export default function SettingsScreen() {
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Preferences</Text>
-                    <View style={styles.card}>
-                        <View style={styles.row}>
-                            <Text style={styles.rowLabel}>Currency</Text>
+                    <TouchableOpacity style={styles.row} onPress={handleChangeCurrency}>
+                        <Text style={styles.rowLabel}>Currency</Text>
+                        <View style={styles.rowRight}>
                             <Text style={styles.rowValue}>{settings.currency} ({settings.currencySymbol})</Text>
+                            <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                         </View>
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.section}>
@@ -190,5 +215,6 @@ const styles = StyleSheet.create({
     actionRow: { flexDirection: 'row', alignItems: 'center', padding: theme.spacing.md },
     actionText: { fontSize: theme.typography.body.fontSize, marginLeft: theme.spacing.sm },
     categoryRowContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-catIconContainer: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: theme.spacing.sm },
+    catIconContainer: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: theme.spacing.sm },
+    rowRight: { flexDirection: 'row', alignItems: 'center' },
 });
